@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing Input for TensorFlow.js Model</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <style>
+        canvas {
+            border: 1px solid black;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+    <h1>Draw a Number</h1>
+    <canvas id="drawingCanvas" width="280" height="280"></canvas>
+    <br>
+    <button id="clearButton">Clear</button>
+    <button id="predictButton">Predict</button>
+    <h2 id="result"></h2>
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const context = canvas.getContext('2d');
+        const resultElement = document.getElementById('result');
+
+        let drawing = false;
+
+        // Start drawing
+        canvas.addEventListener('mousedown', (e) => {
+            drawing = true;
+            context.moveTo(e.offsetX, e.offsetY);
+        });
+
+        // Draw on canvas
+        canvas.addEventListener('mousemove', (e) => {
+            if (drawing) {
+                context.lineTo(e.offsetX, e.offsetY);
+                context.stroke();
+            }
+        });
+
+        // Stop drawing
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+            context.beginPath();
+        });
+
+        // Clear the canvas
+        document.getElementById('clearButton').addEventListener('click', () => {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            resultElement.innerText = '';
+        });
+
+        // Load the TensorFlow.js model
+        let model;
+        async function loadModel() {
+            model = await tf.loadLayersModel('model_tfjs/model.json');
+            console.log('Model loaded successfully!');
+        }
+        loadModel();
+
+        // Predict the drawn number
+        document.getElementById('predictButton').addEventListener('click', async () => {
+            // Convert the canvas drawing to a tensor
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const inputTensor = preprocessImage(imageData);
+            
+            // Make a prediction
+            const prediction = model.predict(inputTensor);
+            const predictedLabel = prediction.argMax(-1).dataSync()[0];  // Get the predicted label
+            resultElement.innerText = `Predicted Label: ${predictedLabel}`;
+        });
+
+        // Preprocess the image data for the model
+        function preprocessImage(imageData) {
+            // Get pixel data
+            const data = imageData.data;
+            const tensor = tf.tensor(data, [canvas.height, canvas.width, 4]); // [height, width, channels]
+
+            // Convert to grayscale and normalize to [0, 1]
+            const grayscale = tensor.mean(2).expandDims(2).div(255.0);
+
+            // Resize the image to the expected input size (if required)
+            const resized = tf.image.resizeBilinear(grayscale, [28, 28]).expandDims(0); // [1, height, width, channels]
+
+            return resized; // Shape: [1, 28, 28, 1]
+        }
+    </script>
+</body>
+</html>
