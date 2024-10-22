@@ -4,8 +4,16 @@ let drawing = false;
 let model;
 
 async function loadModel() {
-    model = await tf.loadLayersModel('tfjs_model/model.json');
-    document.getElementById('predict-button').disabled = false; // Enable the button once the model is loaded
+    try {
+        document.getElementById('loading').style.display = 'block';
+        model = await tf.loadLayersModel('tfjs_model/model.json');
+        console.log('Model loaded successfully');
+        document.getElementById('predict-button').disabled = false; // Enable the button once the model is loaded
+        document.getElementById('loading').style.display = 'none';
+    } catch (error) {
+        console.error('Error loading model:', error);
+        document.getElementById('loading').innerText = 'Error loading model. Please try again later.';
+    }
 }
 
 loadModel();
@@ -35,14 +43,18 @@ async function predictDigit() {
         alert('Model not loaded yet. Please wait.');
         return;
     }
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const tensor = tf.browser.fromPixels(imageData, 1)
-        .resizeNearestNeighbor([28, 28])
-        .mean(2)
-        .toFloat()
-        .expandDims(0)
-        .expandDims(-1)
-        .div(255.0);
-    const prediction = await model.predict(tensor).argMax(-1).data();
-    document.getElementById('result').innerText = `Prediction: ${prediction[0]}`;
+    try {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const tensor = tf.browser.fromPixels(imageData, 1)
+            .resizeNearestNeighbor([28, 28])
+            .mean(2)
+            .toFloat()
+            .expandDims(0)
+            .expandDims(-1)
+            .div(255.0);
+        const prediction = await model.predict(tensor).argMax(-1).data();
+        document.getElementById('result').innerText = `Prediction: ${prediction[0]}`;
+    } catch (error) {
+        console.error('Error during prediction:', error);
+    }
 }
