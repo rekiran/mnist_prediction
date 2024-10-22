@@ -7,8 +7,9 @@ async function loadModel() {
     try {
         document.getElementById('loading').style.display = 'block';
         model = await tf.loadLayersModel('tfjs_model/model.json');
-        console.log('Model loaded successfully');
-        document.getElementById('predict-button').disabled = false; // Enable the button once the model is loaded
+        console.log('Model loaded successfully:', model);
+        console.log('Model input shape:', model.inputs[0].shape);
+        document.getElementById('predict-button').disabled = false;
         document.getElementById('loading').style.display = 'none';
     } catch (error) {
         console.error('Error loading model:', error);
