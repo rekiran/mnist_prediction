@@ -5,6 +5,7 @@ let model;
 
 async function loadModel() {
     model = await tf.loadLayersModel('tfjs_model/model.json');
+    document.getElementById('predict-button').disabled = false; // Enable the button once the model is loaded
 }
 
 loadModel();
@@ -30,6 +31,10 @@ function clearCanvas() {
 }
 
 async function predictDigit() {
+    if (!model) {
+        alert('Model not loaded yet. Please wait.');
+        return;
+    }
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const tensor = tf.browser.fromPixels(imageData, 1)
         .resizeNearestNeighbor([28, 28])
