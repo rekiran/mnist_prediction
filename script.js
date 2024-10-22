@@ -44,5 +44,5 @@ async function predictDigit() {
         .expandDims(-1)
         .div(255.0);
     const prediction = await model.predict(tensor).argMax(-1).data();
-    document.getElementById('result').innerText = `Prediction: ${prediction[0]}`; // Ensure this line is here
+    document.getElementById('result').innerText = `Prediction: ${prediction[0]}`;
 }
